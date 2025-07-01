@@ -1,0 +1,33 @@
+name: Build & Release App
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          pip install -r requirements.txt pyinstaller
+      - run: |
+          pyinstaller --noconfirm --noconsole --icon icon.ico --add-data "src/splash.png;splash.png" src/main.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: UniversalRenderGUI
+          path: dist/main.exe
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: UniversalRenderGUI
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: main.exe
